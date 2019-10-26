@@ -64,14 +64,14 @@ for(year in years){
             no2 = prec["HDFEOS"]["GRIDS"]["ColumnAmountNO2"]["Data Fields"][columnNames[2]][]
             h5close(prec)
             
-            r <- raster(nrow=nrow(no2tropo), ncol=ncol(no2tropo))
-            lons <- init(r, 'x')
-            lats <- init(r, 'y')
+            r = raster(nrow=nrow(no2tropo), ncol=ncol(no2tropo))
+            lons = init(r, 'x')
+            lats = init(r, 'y')
 
-            tmp <- data.table(X=as.vector(lons), 
-                              Y=as.vector(rev(lats)),
-                              no2=as.vector(t(no2)),
-                              no2tropo=as.vector(t(no2tropo)))
+            tmp = data.table(X=as.vector(lons), 
+                             Y=as.vector(rev(lats)),
+                             no2=as.vector(t(no2)),
+                             no2tropo=as.vector(t(no2tropo)))
             
             tmp$date = as.Date(paste(substr(hdf5File, 20, 23), substr(hdf5File, 25, 26), substr(hdf5File, 27, 28), sep = "-"))
 
