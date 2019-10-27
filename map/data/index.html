@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset='utf-8' />
+      <title>keano map</title>
+      <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+      <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+      <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
+      <style>
+         body { margin:0; padding:0; }
+         #map { position:absolute; top:0; bottom:0; width:100%; }
+      </style>
+   </head>
+   <body>
+      <style>
+         #features {
+         position: absolute;
+         top: 0;
+         right: 0;
+         bottom: 0;
+         width: 400px;
+         overflow: auto;
+         background: rgba(255, 255, 255, 0.8);
+         }
+         #map canvas {
+         cursor: crosshair;
+         }
+      </style>
+      <div id='map'></div>
+      <pre id='features'></pre>
+      <script>
+         mapboxgl.accessToken = 'pk.eyJ1Ijoic3dlaW5nIiwiYSI6ImNqZ2gyYW50ODA0YTEycXFxYTAyOTZza2IifQ.NbvRDornVZjSg_RCJdE7ig';
+         var map = new mapboxgl.Map({
+         container: 'map',
+         style: 'mapbox://styles/sweing/cjrt0lzml9igq2smshy46bfe7',
+         center: [118, 40],
+         zoom: 4
+         });
+         var hoveredStateId =  null;
+          
+          
+         map.on('load', function () {
+         map.addSource("states", {
+         "type": "geojson",
+         "data": "China_rastered.geojson"
+         });
+          
+         // The feature-state dependent fill-opacity expression will render the hover effect
+         // when a feature's hover state is set to true.
+         map.addLayer({
+         "id": "state-fills",
+         "type": "fill",
+         "source": "states",
+         "layout": {},
+         "paint": {
+         "fill-color": [
+           "interpolate",
+           ["linear"],
+           ["get", "value"],
+           362585807276032,
+           "hsl(236, 89%, 52%)",
+           5255121854103026,
+           "hsl(0, 39%, 100%)",
+           10147657900930020,
+           "hsl(0, 98%, 55%)",
+           24008673464939300,
+           "hsl(59, 98%, 55%)"
+         ],
+         "fill-antialias": false,
+         "fill-opacity": ["case",
+         ["boolean", ["feature-state", "hover"], false],
+         0.1,
+         0.3
+         ],
+         }
+         });
+          
+         map.addLayer({
+         "id": "state-borders",
+         "type": "line",
+         "source": "states",
+         "layout": {},
+         "paint": {
+         "line-color": "#627BC1",
+         "line-width": 0
+         }
+         });
+          
+         // When the user moves their mouse over the state-fill layer, we'll update the
+         // feature state for the feature under the mouse.
+         map.on("mousemove", "state-fills", function(e) {
+         if (e.features.length > 0) {
+         if (hoveredStateId) {
+         map.setFeatureState({source: 'states', id: hoveredStateId}, { hover: false});
+         }
+         hoveredStateId = e.features[0].id;
+         map.setFeatureState({source: 'states', id: hoveredStateId}, { hover: true});
+         
+         var features = map.queryRenderedFeatures(e.point);
+         document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+         }
+         });
+          
+         // When the mouse leaves the state-fill layer, update the feature state of the
+         // previously hovered feature.
+         map.on("mouseleave", "state-fills", function() {
+         if (hoveredStateId) {
+         map.setFeatureState({source: 'states', id: hoveredStateId}, { hover: false});
+         }
+         hoveredStateId =  null;
+         });
+         });
+      </script>
+   </body>
+</html>
