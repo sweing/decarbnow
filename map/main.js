@@ -1,5 +1,4 @@
 import { map, tileLayer, marker, Icon } from 'leaflet';
-import markers from './data/marker.json';
 import twemoji from 'twemoji';
 import TwitterWidgetsLoader from 'twitter-widgets';
 import $ from 'jquery';
@@ -9,7 +8,7 @@ import { encode } from '@alexpavlov/geohash-js';
 // configuration and declaration
 //**************************************************************************
 
-let keanoMap = map('map', {
+let decarbnowMap = map('map', {
     zoomControl: false // manually added
 }).setView([48.2084, 16.373], 11);
 let markerInfo = {
@@ -23,7 +22,7 @@ let markerInfo = {
         "img": "/dist/img/pollution.png",
         "title": "Pollution",
         "question": "Who pollutes our planet?",
-        "desc": "Some do, some dont. We all want change. See who works against positive change!"
+        "desc": "Some do, some dont. We all want change. See who works against positive change!!"
     },
     "transition": {
         "img": "/dist/img/transition.png",
@@ -32,11 +31,7 @@ let markerInfo = {
         "desc": "Switching to lower energy consuming machinery is the first step. See who is willing to make the first step."
     }
 };
-let currentMarkers = {
-    "climateaction": [],
-    "pollution": [],
-    "transition": []
-};
+let currentMarkers = {};
 let currentMarkerFilters = ["climateaction", "pollution", "transition"];
 
 let LeafIcon = Icon.extend({
@@ -64,6 +59,13 @@ let showGeoLoc = L.popup().setContent(
 // functions
 //**************************************************************************
 
+function initializeMarkers() {
+    currentMarkers = {
+        "climateaction": [],
+        "pollution": [],
+        "transition": []
+    };
+}
 
 function createBackgroundMap() {
     return tileLayer('https://api.mapbox.com/styles/v1/sweing/cjrt0lzml9igq2smshy46bfe7/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic3dlaW5nIiwiYSI6ImNqZ2gyYW50ODA0YTEycXFxYTAyOTZza2IifQ.NbvRDornVZjSg_RCJdE7ig', {
@@ -120,14 +122,14 @@ function showError() {
 /*
 let videoUrl = 'https://www.mapbox.com/bites/00188/patricia_nasa.webm',
     videoBounds = [[ 32, -130], [ 13, -100]];
-L.videoOverlay(videoUrl, videoBounds ).addTo(keanoMap);
+L.videoOverlay(videoUrl, videoBounds ).addTo(decarbnowMap);
 */
 
 /*
 let videoUrl = 'dist/img/tropomi.mp4',
     videoBounds = [[ 70, -180], [ -70, 180]],
     videoOptions = {opacity: 0.5};
-L.videoOverlay(videoUrl, videoBounds, videoOptions).addTo(keanoMap);
+L.videoOverlay(videoUrl, videoBounds, videoOptions).addTo(decarbnowMap);
 */
 
 
@@ -135,35 +137,46 @@ L.videoOverlay(videoUrl, videoBounds, videoOptions).addTo(keanoMap);
 
 
 function refreshMarkers() {
-    markers.markers.forEach(function(item) {
-        let text = item.text;
-        let twitterId = null;
-        if (item.hasOwnProperty("origurl") && item.origurl.length > 0) {
-            let tws = item.origurl.split("/");
-            twitterId = tws[tws.length-1];
-            text += '<br/><div id="tweet-' + twitterId + '"></div>'; // <a href=\"" + item.origurl + "\"><img src=\"dist/img/twitter.png\" /></a>
+    if ($('.decarbnowpopup').length > 0) {
+        return;
+    }
+    $.get('/data/marker.json', function(data) {
+        for (var i in currentMarkers) {
+            for (var mi in currentMarkers[i]) {
+                decarbnowMap.removeLayer(currentMarkers[i][mi]);
+            }
         }
-        let mm = marker([item.lat, item.lng], {icon: icons[item.tag]});
-        currentMarkers[item.tag].push(mm
-            .bindPopup(
-                twemoji.parse(text),
-                {className:"keanopopup"}
-            )
-            .addTo(keanoMap)
-        );
+        initializeMarkers();
+        data.markers.forEach(function(item) {
+            let text = item.text;
+            let twitterId = null;
+            if (item.hasOwnProperty("origurl") && item.origurl.length > 0) {
+                let tws = item.origurl.split("/");
+                twitterId = tws[tws.length-1];
+                text += '<br/><div id="tweet-' + twitterId + '"></div>'; // <a href=\"" + item.origurl + "\"><img src=\"dist/img/twitter.png\" /></a>
+            }
+            let mm = marker([item.lat, item.lng], {icon: icons[item.tag]});
+            currentMarkers[item.tag].push(mm
+                .bindPopup(
+                    twemoji.parse(text),
+                    {className:"decarbnowpopup"}
+                )
+                .addTo(decarbnowMap)
+            );
 
-        if (item.hasOwnProperty("origurl") && item.origurl.length > 0) {
-            mm.on("popupopen", () => {
-                TwitterWidgetsLoader.load(function(err, twttr) {
-                    if (err) {
-                        showError();
-                        return;
-                    }
+            if (item.hasOwnProperty("origurl") && item.origurl.length > 0) {
+                mm.on("popupopen", () => {
+                    TwitterWidgetsLoader.load(function(err, twttr) {
+                        if (err) {
+                            showError();
+                            return;
+                        }
 
-                    twttr.widgets.createTweet(twitterId, document.getElementById('tweet-' + twitterId));
+                        twttr.widgets.createTweet(twitterId, document.getElementById('tweet-' + twitterId));
+                    });
                 });
-            })
-        }
+            }
+        });
     });
 }
 
@@ -199,42 +212,16 @@ L.control.markers = function(opts) {
     return new L.Control.Markers(opts);
 };
 
-//**************************************************************************
-// initiation
-//**************************************************************************
-
-refreshMarkers();
-
-
-$.getJSON("/dist/Europe_rastered.geojson",function(data){
-
-    // add GeoJSON layer to the map once the file is loaded
-    //L.geoJson(data).addTo(keanoMap);
-    //var statesData = L.geoJson(data)
-
-    let baseLayers = {
-        "Background": createBackgroundMap().addTo(keanoMap)
-    };
-    let overlays = {
-        "NO2 Pollution": L.geoJson(data, {style: pollutionStyle}).addTo(keanoMap)
-    };
-
-    L.control.layers(baseLayers, overlays).addTo(keanoMap);
-});
-
-L.control.markers({ position: 'topleft' }).addTo(keanoMap);
-L.control.zoom({ position: 'topleft' }).addTo(keanoMap);
-
 
 //**************************************************************************
 // events
 //**************************************************************************
 
-keanoMap.on('contextmenu',function(e){
+decarbnowMap.on('contextmenu',function(e){
     console.log(e);
     let hash = encode(e.latlng.lat, e.latlng.lng);
 
-    let text = '<p>Decarbonize Now!</p>' +
+    let text = '<p>Tweet about climate action, pollution or a climate transition taking place here using the buttons below:</p>' +
     '<a target="_blank" href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="#decarbnow #climateaction @' + hash + '">#decarbnow #climateaction @' + hash + '</a> #decarbnow #climateaction @' + hash +'<br />'+
     '<a target="_blank" href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="#decarbnow #transition @' + hash + '">#decarbnow #transition @' + hash + '</a> #decarbnow #transition @' + hash + '<br />'+
     '<a target="_blank" href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="#decarbnow #pollution @' + hash + '">#decarbnow #pollution @' + hash + '</a> #decarbnow #pollution @' + hash;
@@ -242,7 +229,7 @@ keanoMap.on('contextmenu',function(e){
     showGeoLoc
         .setLatLng(e.latlng)
         .setContent(text)
-        .openOn(keanoMap);
+        .openOn(decarbnowMap);
     console.log(e);
     TwitterWidgetsLoader.load(function(err, twttr) {
         if (err) {
@@ -254,3 +241,34 @@ keanoMap.on('contextmenu',function(e){
         twttr.widgets.load();
     });
 });
+
+
+//**************************************************************************
+// initiation
+//**************************************************************************
+
+initializeMarkers();
+refreshMarkers();
+
+
+$.getJSON("/dist/Europe_rastered.geojson",function(data){
+
+    // add GeoJSON layer to the map once the file is loaded
+    //L.geoJson(data).addTo(decarbnowMap);
+    //var statesData = L.geoJson(data)
+
+    let baseLayers = {
+        "Background": createBackgroundMap().addTo(decarbnowMap)
+    };
+    let overlays = {
+        "NO2 Pollution": L.geoJson(data, {style: pollutionStyle}).addTo(decarbnowMap)
+    };
+
+    L.control.layers(baseLayers, overlays).addTo(decarbnowMap);
+});
+
+L.control.markers({ position: 'topleft' }).addTo(decarbnowMap);
+L.control.zoom({ position: 'topleft' }).addTo(decarbnowMap);
+
+
+window.setInterval(refreshMarkers, 30000);
