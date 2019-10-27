@@ -1,2 +1,2 @@
 # decarbnow
-We are working to find ways to give people who are part of climate activism communities a better voice by relating their activism to remote sensor data on a map
+The #decarbnow map brings climate activism and satellite data together. We visualize NO2 pollution hotspots based on NASA OMI satellite data. In the future we also aim to visualize other pollution data in order to have. On this map, digital climate activists can register and pinpoint polluters, climate transitions and climate action. At this moment, this can be done with the use of Twitter, but in the future we want to make it available to other social media platforms as well. 
