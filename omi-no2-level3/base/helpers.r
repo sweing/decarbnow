@@ -19,7 +19,7 @@ saveData = function(data, fileName) {
     if (endsWith(fileName, ".dta")) {
         write.dta(data, fileName)
     } else if (endsWith(fileName, ".csv")){
-        write.csv(data, fileName)
+        fwrite(data, fileName)
     } else {
         save(data, file=fileName)
     }
