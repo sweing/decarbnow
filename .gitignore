@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 .idea
+tmp
 map/dist/bundle.js
 map/node_modules
 map/dist/bundle.js.map
