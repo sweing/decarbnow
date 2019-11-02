@@ -3,6 +3,7 @@ import twemoji from 'twemoji';
 import TwitterWidgetsLoader from 'twitter-widgets';
 import $ from 'jquery';
 import { encode } from '@alexpavlov/geohash-js';
+import MarkerClusterGroup from 'leaflet.markercluster';
 
 //**************************************************************************
 // configuration and declaration
@@ -11,6 +12,7 @@ import { encode } from '@alexpavlov/geohash-js';
 let decarbnowMap = map('map', {
     zoomControl: false // manually added
 }).setView([48.2084, 16.373], 11);
+
 let markerInfo = {
     "climateaction": {
         "img": "/dist/img/action.png",
@@ -55,6 +57,15 @@ let showGeoLoc = L.popup().setContent(
     '<p>Tell the World!</p>'
 );
 
+let markerClusters = L.markerClusterGroup(
+    {
+        disableClusteringAtZoom: 19,
+        maxClusterRadius: 100,
+        animatedAddingMarkers: false,
+        showCoverageOnHover: false
+        //removeOutsideVisibleBounds: true
+    });
+
 //**************************************************************************
 // functions
 //**************************************************************************
@@ -88,10 +99,12 @@ function pollutionStyle(feature) {
 
 function getPollutionOpacity(value) {
 
-    let max = 24009000000000000;
-    let min = 350000000000000;
+    //let max = 24009000000000000;
+    //let min = 350000000000000;
+    let max = 1;
+    let min = 0;
 
-    return Math.max(0, (value - min ) / (max - min));
+    return Math.max(0, (value - min ) / (max - min) * 0.3);
 }
 
 function createLayer1() {
@@ -137,6 +150,7 @@ L.videoOverlay(videoUrl, videoBounds, videoOptions).addTo(decarbnowMap);
 
 
 function refreshMarkers() {
+    markerClusters.clearLayers()
     if ($('.decarbnowpopup').length > 0) {
         return;
     }
@@ -150,20 +164,27 @@ function refreshMarkers() {
         data.markers.forEach(function(item) {
             let text = item.text;
             let twitterId = null;
+            
+            if(currentMarkerFilters.indexOf(item.tag) === -1){
+                return;
+            }
             if (item.hasOwnProperty("origurl") && item.origurl.length > 0) {
                 let tws = item.origurl.split("/");
                 twitterId = tws[tws.length-1];
                 text += '<br/><div id="tweet-' + twitterId + '"></div>'; // <a href=\"" + item.origurl + "\"><img src=\"dist/img/twitter.png\" /></a>
             }
-            let mm = marker([item.lat, item.lng], {icon: icons[item.tag]});
+            let mm = marker([item.lat, item.lng], {icon: icons[item.tag]})
+            
+            //decarbnowMap.addLayer(markerClusters);
             currentMarkers[item.tag].push(mm
                 .bindPopup(
                     twemoji.parse(text),
                     {className:"decarbnowpopup"}
                 )
-                .addTo(decarbnowMap)
+                .addTo(markerClusters)
+                //.addTo(decarbnowMap)
             );
-
+            
             if (item.hasOwnProperty("origurl") && item.origurl.length > 0) {
                 mm.on("popupopen", () => {
                     TwitterWidgetsLoader.load(function(err, twttr) {
@@ -177,8 +198,11 @@ function refreshMarkers() {
                 });
             }
         });
+        
     });
+    
 }
+
 
 L.Control.Markers = L.Control.extend({
     onAdd: function(map) {
@@ -212,11 +236,9 @@ L.control.markers = function(opts) {
     return new L.Control.Markers(opts);
 };
 
-
 //**************************************************************************
 // events
 //**************************************************************************
-
 decarbnowMap.on('contextmenu',function(e){
     console.log(e);
     let hash = encode(e.latlng.lat, e.latlng.lng);
@@ -251,24 +273,24 @@ initializeMarkers();
 refreshMarkers();
 
 
-$.getJSON("/dist/Europe_rastered.geojson",function(data){
+$.getJSON("/dist/World_rastered.geojson",function(data){
 
     // add GeoJSON layer to the map once the file is loaded
     //L.geoJson(data).addTo(decarbnowMap);
     //var statesData = L.geoJson(data)
-
     let baseLayers = {
         "Background": createBackgroundMap().addTo(decarbnowMap)
     };
     let overlays = {
         "NO2 Pollution": L.geoJson(data, {style: pollutionStyle}).addTo(decarbnowMap)
     };
+    
+    decarbnowMap.addLayer(markerClusters);
 
     L.control.layers(baseLayers, overlays).addTo(decarbnowMap);
 });
 
 L.control.markers({ position: 'topleft' }).addTo(decarbnowMap);
 L.control.zoom({ position: 'topleft' }).addTo(decarbnowMap);
-
 
 window.setInterval(refreshMarkers, 30000);
