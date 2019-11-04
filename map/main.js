@@ -88,6 +88,7 @@ function pollutionStyle(feature) {
     return {
         fillColor: "#FF0000",
         stroke: false,
+        interactive: false,
         //weight: 2,
         //opacity: 1,
         //color: 'white',
@@ -95,7 +96,6 @@ function pollutionStyle(feature) {
         fillOpacity: getPollutionOpacity(feature.properties.value)
     };
 }
-
 
 function getPollutionOpacity(value) {
 
@@ -272,22 +272,31 @@ decarbnowMap.on('contextmenu',function(e){
 initializeMarkers();
 refreshMarkers();
 
+// add GeoJSON layers to the map once all files are loaded
+$.getJSON("/dist/World_rastered.geojson",function(no2){
+    $.getJSON("/dist/global_power_plant_database.geojson",function(coalplants) {
 
-$.getJSON("/dist/World_rastered.geojson",function(data){
-
-    // add GeoJSON layer to the map once the file is loaded
-    //L.geoJson(data).addTo(decarbnowMap);
-    //var statesData = L.geoJson(data)
-    let baseLayers = {
-        "Background": createBackgroundMap().addTo(decarbnowMap)
-    };
-    let overlays = {
-        "NO2 Pollution": L.geoJson(data, {style: pollutionStyle}).addTo(decarbnowMap)
-    };
-    
-    decarbnowMap.addLayer(markerClusters);
-
-    L.control.layers(baseLayers, overlays).addTo(decarbnowMap);
+        let baseLayers = {
+            "Background": createBackgroundMap().addTo(decarbnowMap)
+        };
+        let overlays = {
+            "NO2 Pollution": L.geoJson(no2, {style: pollutionStyle}).addTo(decarbnowMap),
+            "Coal Plants": L.geoJson(coalplants, {
+                style: function(feature) {
+                    return {color: '#000000'};
+                },
+                pointToLayer: function(feature, latlng) {
+                    return new L.CircleMarker(latlng, {radius: 1, fillOpacity: 0.85});
+                },
+                onEachFeature: function (feature, layer) {
+                    layer.bindPopup(feature.properties.name + ' (' + feature.properties.primary_fuel + ')');
+                }
+            }).addTo(decarbnowMap)
+        };
+        
+        decarbnowMap.addLayer(markerClusters);
+        L.control.layers(baseLayers, overlays).addTo(decarbnowMap);
+    });
 });
 
 L.control.markers({ position: 'topleft' }).addTo(decarbnowMap);
