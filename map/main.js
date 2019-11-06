@@ -280,8 +280,8 @@ $.getJSON("/dist/World_rastered.geojson",function(no2){
             "Background": createBackgroundMap().addTo(decarbnowMap)
         };
         let overlays = {
-            "NO2 Pollution": L.geoJson(no2, {style: pollutionStyle}).addTo(decarbnowMap),
-            "Coal Plants": L.geoJson(coalplants, {
+            "NO2 Pollution by NASA OMI": L.geoJson(no2, {style: pollutionStyle}).addTo(decarbnowMap),
+            "Coal-fired power stations > 1.000 MW": L.geoJson(coalplants, {
                 style: function(feature) {
                     return {color: '#000000'};
                 },
@@ -289,7 +289,12 @@ $.getJSON("/dist/World_rastered.geojson",function(no2){
                     return new L.CircleMarker(latlng, {radius: 1, fillOpacity: 0.85});
                 },
                 onEachFeature: function (feature, layer) {
-                    layer.bindPopup(feature.properties.name + ' (' + feature.properties.primary_fuel + ')');
+                    layer.bindPopup('<table><tr><td>Name:</td><td>' + feature.properties.name + '</td></tr>' + 
+                                    '<tr><td>Fuel:</td><td>' + feature.properties.primary_fuel + '</td></tr>'+
+                                    '<tr><td>Capacity:</td><td>' + feature.properties.capacity_mw + ' MW</td></tr>'+
+                                    '<tr><td>Owner:</td><td>' + feature.properties.owner + '</td></tr>'+
+                                    '<tr><td>Source:</td><td><a href =' + feature.properties.url +' target = popup>'  + feature.properties.source + '</a></td></tr>'+
+                                    '</table>');
                 }
             }).addTo(decarbnowMap)
         };
