@@ -283,10 +283,10 @@ $.getJSON("/dist/World_rastered.geojson",function(no2){
             "NO2 Pollution by NASA OMI": L.geoJson(no2, {style: pollutionStyle}).addTo(decarbnowMap),
             "Coal-fired power stations > 1.000 MW": L.geoJson(coalplants, {
                 style: function(feature) {
-                    return {color: '#000000'};
+                    return {color: '#FFFF00'};
                 },
                 pointToLayer: function(feature, latlng) {
-                    return new L.CircleMarker(latlng, {radius: 1, fillOpacity: 0.85});
+                    return new L.CircleMarker(latlng, {radius: feature.properties.capacity_mw/1000/0.5, stroke: false, fillOpacity: 0.5});
                 },
                 onEachFeature: function (feature, layer) {
                     layer.bindPopup('<table><tr><td>Name:</td><td>' + feature.properties.name + '</td></tr>' + 
