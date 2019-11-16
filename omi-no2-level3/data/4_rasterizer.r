@@ -108,7 +108,7 @@ for (i in 1:l) {
 poly_colors = c("red", "green", "blue", "yellow", "black", "white")
 
 leaflet_map = leaflet() %>% addProviderTiles("CartoDB.Positron") 
-final_poly = SpatialPolygonsDataFrame(SpatialPolygons(list()), data=data.frame())
+
 for(i in 1:length(polys)){
     leaflet_map = leaflet_map %>% 
         addPolygons(data = polys[[i]], color = poly_colors[i])
