@@ -68,6 +68,7 @@ let markerClusters = L.markerClusterGroup(
     });
 
 let sidebar = L.control.sidebar('sidebar', {
+    closeButton: true,
     position: 'left'
 });
 
@@ -90,6 +91,15 @@ function createBackgroundMap() {
     });
 }
 
+function createBackgroundMapSat() {
+    return tileLayer('https://api.mapbox.com/styles/v1/sweing/ck1xo0pmx1oqs1co74wlf0dkn/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic3dlaW5nIiwiYSI6ImNqZ2gyYW50ODA0YTEycXFxYTAyOTZza2IifQ.NbvRDornVZjSg_RCJdE7ig', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, © <a href="https://www.mapbox.com/legal/tos/">MapBox</a>'
+    });
+}
+//https://api.mapbox.com/styles/v1/sweing/ck1xo0pmx1oqs1co74wlf0dkn/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic3dlaW5nIiwiYSI6ImNqZ2gyYW50ODA0YTEycXFxYTAyOTZza2IifQ.NbvRDornVZjSg_RCJdE7ig
+//https://api.mapbox.com/styles/v1/sweing/cjrt0lzml9igq2smshy46bfe7/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic3dlaW5nIiwiYSI6ImNqZ2gyYW50ODA0YTEycXFxYTAyOTZza2IifQ.NbvRDornVZjSg_RCJdE7ig
+
+
 function pollutionStyle(feature) {
     return {
         fillColor: "#FF0000",
@@ -110,7 +120,8 @@ function getPollutionOpacity(value) {
     let max = 1;
     let min = 0;
 
-    return Math.max(0, (value - min ) / (max - min) * 0.3);
+    //return Math.max(0, (value - min ) / (max - min) * 0.3);
+    return 0.1;
 }
 
 function createLayer1() {
@@ -254,15 +265,26 @@ decarbnowMap.on('contextmenu',function(e){
     console.log(e);
     let hash = encode(e.latlng.lat, e.latlng.lng);
 
-    let text = '<p>Tweet about climate action, pollution or a climate transition taking place here using the buttons below:</p>' +
+    let text = '<p>Tweet about'+
+    '<dl>'+
+    '<dd><img src="/dist/img/action.png" width="14">climate action</dd>'+
+    '<dd><img src="/dist/img/pollution.png" width="14">pollution</dd>'+
+    '<dd><img src="/dist/img/transition.png" width="14">climate transition</dd>'+
+    '</dl>'+
+    'taking place here using the buttons below:</p>' +
+
     '<a target="_blank" href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="#decarbnow #climateaction @' + hash + '">#decarbnow #climateaction @' + hash + '</a> #decarbnow #climateaction @' + hash +'<br />'+
     '<a target="_blank" href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="#decarbnow #transition @' + hash + '">#decarbnow #transition @' + hash + '</a> #decarbnow #transition @' + hash + '<br />'+
     '<a target="_blank" href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false" data-text="#decarbnow #pollution @' + hash + '">#decarbnow #pollution @' + hash + '</a> #decarbnow #pollution @' + hash;
-
+    /*
     showGeoLoc
         .setLatLng(e.latlng)
         .setContent(text)
         .openOn(decarbnowMap);
+    */
+    sidebar.show()
+    sidebar.setContent(text)
+
     console.log(e);
     TwitterWidgetsLoader.load(function(err, twttr) {
         if (err) {
@@ -292,7 +314,8 @@ $.getJSON("/dist/World_rastered.geojson",function(no2){
     $.getJSON("/dist/global_power_plant_database.geojson",function(coalplants) {
 
         let baseLayers = {
-            "Background": createBackgroundMap().addTo(decarbnowMap)
+            "Satellite": createBackgroundMapSat(),
+            "Dark": createBackgroundMap().addTo(decarbnowMap)
         };
         let overlays = {
             "NO2 Pollution by NASA OMI": L.geoJson(no2, {style: pollutionStyle}).addTo(decarbnowMap),
