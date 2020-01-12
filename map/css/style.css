@@ -91,22 +91,24 @@
 }
 
 .workingspace p {
-    font-size: 18px;
+    font-size: 16px;
     color: #ACACAC;
     font-weight: 500;
+    margin-bottom: 10px;
 }
 
 
 /* Testimonial */
 .testimonial {
-    margin-top: 80px;
+    margin-top: 30px;
+    margin-bottom: 100px;
 }
 
 .testimonial p {
     font-size: 1em;
     text-align: left;
     font-weight: 200;
-    margin-bottom: 60px;
+    margin-bottom: 20px;
 }
 
 .testimonial img {
