@@ -22,8 +22,8 @@
   "license": "MIT",
   "devDependencies": {
     "json-loader": "^0.5.7",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.10",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
     "webpack-serve": "^3.2.0"
   }
 }
